@@ -2397,5 +2397,292 @@ function closeWelcome(){
 })();
 
 </script>
+
+<!-- ═══ CHAT IA NATURE COIN ═══ -->
+<style>
+#nc-chat-btn{
+  position:fixed;bottom:28px;right:28px;z-index:9999;
+  width:56px;height:56px;border-radius:50%;
+  background:var(--accent);border:none;cursor:pointer;
+  box-shadow:0 4px 24px rgba(0,201,167,.35);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .25s;
+}
+#nc-chat-btn:hover{transform:scale(1.08);box-shadow:0 6px 32px rgba(0,201,167,.5)}
+#nc-chat-btn svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#nc-chat-badge{
+  position:absolute;top:-3px;right:-3px;
+  background:#FF4D5A;color:#fff;
+  font-size:9px;font-weight:700;
+  width:18px;height:18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:monospace;border:2px solid var(--bg);
+}
+
+#nc-chat-panel{
+  position:fixed;bottom:96px;right:28px;z-index:9998;
+  width:360px;max-height:540px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;display:flex;flex-direction:column;
+  box-shadow:0 16px 60px rgba(0,0,0,.6);
+  transform:scale(.92) translateY(16px);opacity:0;
+  pointer-events:none;transition:all .25s cubic-bezier(.34,1.56,.64,1);
+}
+#nc-chat-panel.open{
+  transform:scale(1) translateY(0);opacity:1;pointer-events:all;
+}
+
+.ncp-header{
+  background:linear-gradient(135deg,#0a1929,#0d2137);
+  border-radius:16px 16px 0 0;
+  padding:14px 16px;display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border);
+}
+.ncp-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--accent);display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:16px;
+}
+.ncp-info{flex:1}
+.ncp-name{font-size:13px;font-weight:700;color:var(--text)}
+.ncp-status{font-size:10px;color:var(--accent);display:flex;align-items:center;gap:4px;margin-top:1px}
+.ncp-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);display:block}
+.ncp-close{
+  background:rgba(255,255,255,.06);border:none;cursor:pointer;
+  color:var(--sub);width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;transition:all .2s;
+}
+.ncp-close:hover{background:rgba(255,77,90,.15);color:#FF4D5A}
+
+.ncp-msgs{
+  flex:1;overflow-y:auto;padding:14px 14px 8px;
+  display:flex;flex-direction:column;gap:10px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+
+.ncp-msg{display:flex;gap:8px;align-items:flex-start;animation:msgIn .3s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.ncp-msg.user{flex-direction:row-reverse}
+.ncp-msg-av{
+  width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:12px;
+  margin-top:2px;
+}
+.ncp-msg-av.bot{background:var(--accent)}
+.ncp-msg-av.usr{background:var(--light);color:var(--sub)}
+.ncp-bubble{
+  max-width:240px;padding:9px 12px;border-radius:12px;
+  font-size:12.5px;line-height:1.6;
+}
+.bot .ncp-bubble{
+  background:var(--light);color:var(--text);border-radius:4px 12px 12px 12px;
+}
+.user .ncp-bubble{
+  background:var(--accent);color:#fff;border-radius:12px 4px 12px 12px;
+}
+.ncp-bubble.typing{
+  display:flex;gap:4px;align-items:center;padding:12px 16px;
+}
+.ncp-bubble.typing span{
+  width:6px;height:6px;border-radius:50%;background:var(--sub);
+  animation:bounce .9s infinite;
+}
+.ncp-bubble.typing span:nth-child(2){animation-delay:.15s}
+.ncp-bubble.typing span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+
+.ncp-suggestions{
+  padding:0 14px 10px;display:flex;gap:6px;flex-wrap:wrap;
+}
+.ncp-sug{
+  background:rgba(0,201,167,.08);border:1px solid rgba(0,201,167,.2);
+  border-radius:20px;padding:5px 11px;font-size:11px;color:var(--accent);
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.ncp-sug:hover{background:rgba(0,201,167,.18)}
+
+.ncp-footer{
+  border-top:1px solid var(--border);padding:10px 12px;
+  display:flex;gap:8px;align-items:center;
+}
+#nc-chat-input{
+  flex:1;background:var(--light);border:1px solid var(--border);
+  border-radius:20px;padding:8px 14px;font-size:12.5px;
+  color:var(--text);outline:none;font-family:inherit;
+  transition:border-color .2s;resize:none;height:36px;
+  line-height:1.4;
+}
+#nc-chat-input:focus{border-color:var(--accent)}
+#nc-chat-input::placeholder{color:var(--muted)}
+#nc-chat-send{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--accent);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0;
+}
+#nc-chat-send:hover{background:#00a88f;transform:scale(1.05)}
+#nc-chat-send svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+#nc-chat-send:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+.ncp-limit{
+  text-align:center;padding:6px;
+  font-size:10px;color:var(--muted);font-family:monospace;
+}
+@media(max-width:480px){
+  #nc-chat-panel{width:calc(100vw - 32px);right:16px;bottom:86px}
+  #nc-chat-btn{right:16px;bottom:16px}
+}
+</style>
+
+<!-- Botão flutuante -->
+<button id="nc-chat-btn" onclick="ncToggleChat()" title="Suporte Nature Coin">
+  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  <div id="nc-chat-badge">1</div>
+</button>
+
+<!-- Painel do chat -->
+<div id="nc-chat-panel">
+  <div class="ncp-header">
+    <div class="ncp-avatar">🌲</div>
+    <div class="ncp-info">
+      <div class="ncp-name">Assistente Nature Coin</div>
+      <div class="ncp-status">Online agora</div>
+    </div>
+    <button class="ncp-close" onclick="ncToggleChat()">✕</button>
+  </div>
+
+  <div class="ncp-msgs" id="nc-msgs"></div>
+
+  <div class="ncp-suggestions" id="nc-sugs">
+    <button class="ncp-sug" onclick="ncSend(this.textContent)">Como usar o painel?</button>
+    <button class="ncp-sug" onclick="ncSend(this.textContent)">O que é score financeiro?</button>
+    <button class="ncp-sug" onclick="ncSend(this.textContent)">Como carregar meu Excel?</button>
+    <button class="ncp-sug" onclick="ncSend(this.textContent)">Falar com suporte</button>
+  </div>
+
+  <div class="ncp-footer">
+    <input id="nc-chat-input" placeholder="Digite sua dúvida..." 
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();ncSend()}"
+    />
+    <button id="nc-chat-send" onclick="ncSend()">
+      <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+  <div class="ncp-limit" id="nc-limit">10 mensagens por sessão</div>
+</div>
+
+<script>
+(function(){
+  const SYSTEM = `Você é o assistente virtual do Controle Financeiro BI, produto da Nature Coin criado por Lucas Pinheiro.
+
+Seu papel:
+- Tirar dúvidas sobre o produto (planilha Excel + painel BI)
+- Orientar o cliente sobre como usar cada seção
+- Dar dicas práticas de finanças pessoais
+- Encaminhar para o suporte quando necessário
+
+Sobre o produto:
+- Planilha Excel com 19 abas (2026-2030)
+- Painel BI com 9 seções: Visão Geral, Investimentos, Carteira, Metas, Patrimônio, Simulador, Score, Alertas e Fluxo
+- Score financeiro de 0 a 100
+- 8 alertas automáticos de saúde financeira
+- CDI em tempo real via Banco Central
+- Funciona no iPhone como PWA
+- Planos: Starter R$29,90 | Essencial R$57 | Completo R$79,90
+
+Suporte e contato: instagram.com/naturecoin_
+Site: www.naturecoin.com.br
+
+Responda sempre em português, de forma clara, amigável e objetiva. Máximo 3 parágrafos por resposta. Se a pergunta não for sobre o produto ou finanças pessoais, redirecione gentilmente.`;
+
+  let msgs = [];
+  let count = 0;
+  const MAX = 10;
+  let open = false;
+
+  function el(id){ return document.getElementById(id); }
+
+  function ncToggleChat(){
+    open = !open;
+    el('nc-chat-panel').classList.toggle('open', open);
+    el('nc-chat-badge').style.display = 'none';
+    if(open && msgs.length === 0) ncAddBot('Olá! 👋 Sou o assistente da Nature Coin. Posso te ajudar com dúvidas sobre o painel BI, a planilha Excel ou finanças pessoais. Como posso ajudar?');
+    if(open) setTimeout(()=>el('nc-chat-input').focus(), 300);
+  }
+
+  function ncAddBot(text, typing=false){
+    const msgs_el = el('nc-msgs');
+    if(typing){
+      const d = document.createElement('div');
+      d.className = 'ncp-msg bot'; d.id = 'nc-typing';
+      d.innerHTML = '<div class="ncp-msg-av bot">🌲</div><div class="ncp-bubble typing"><span></span><span></span><span></span></div>';
+      msgs_el.appendChild(d);
+      msgs_el.scrollTop = msgs_el.scrollHeight;
+      return;
+    }
+    const existing = document.getElementById('nc-typing');
+    if(existing) existing.remove();
+    const d = document.createElement('div');
+    d.className = 'ncp-msg bot';
+    d.innerHTML = '<div class="ncp-msg-av bot">🌲</div><div class="ncp-bubble">' + text.replace(/\n/g,'<br>') + '</div>';
+    msgs_el.appendChild(d);
+    msgs_el.scrollTop = msgs_el.scrollHeight;
+  }
+
+  function ncAddUser(text){
+    const msgs_el = el('nc-msgs');
+    const d = document.createElement('div');
+    d.className = 'ncp-msg user';
+    d.innerHTML = '<div class="ncp-bubble">' + text + '</div><div class="ncp-msg-av usr">👤</div>';
+    msgs_el.appendChild(d);
+    msgs_el.scrollTop = msgs_el.scrollHeight;
+    el('nc-sugs').style.display = 'none';
+  }
+
+  window.ncSend = async function(text){
+    const input = el('nc-chat-input');
+    const msg = (text || input.value).trim();
+    if(!msg) return;
+    if(count >= MAX){
+      ncAddBot('Você atingiu o limite de ' + MAX + ' mensagens desta sessão. Para mais suporte acesse instagram.com/naturecoin_');
+      return;
+    }
+    input.value = '';
+    el('nc-chat-send').disabled = true;
+    ncAddUser(msg);
+    msgs.push({role:'user', content: msg});
+    count++;
+    el('nc-limit').textContent = (MAX - count) + ' mensagens restantes';
+
+    ncAddBot('', true);
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: SYSTEM,
+          messages: msgs
+        })
+      });
+      const data = await res.json();
+      const reply = data.content && data.content[0] ? data.content[0].text : 'Desculpe, não consegui processar. Tente novamente.';
+      msgs.push({role:'assistant', content: reply});
+      ncAddBot(reply);
+    } catch(e) {
+      ncAddBot('Ops! Sem conexão no momento. Acesse instagram.com/naturecoin_ para suporte.');
+    }
+    el('nc-chat-send').disabled = false;
+    input.focus();
+  };
+
+  window.ncToggleChat = ncToggleChat;
+})();
+</script>
+<!-- ═══ FIM CHAT ═══ -->
+
 </body>
 </html>
